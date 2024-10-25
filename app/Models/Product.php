@@ -3,9 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::saving(function ($product) {
+            if (empty($product->slug)) {
+                $product->slug = Str::slug($product->name);
+            }
+        });
+    }
     protected $guarded = ['id'];
 
     protected $casts = [
