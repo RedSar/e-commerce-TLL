@@ -30,7 +30,7 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
-                Group::make()->schema([
+                Group::make(['PRODUCT INFORMATION'])->schema([
                     Forms\Components\Section::make('PRODUCT INFORMATIONS')->schema([
                         Forms\Components\TextInput::make('name')
                             ->required()
@@ -111,8 +111,14 @@ class ProductResource extends Resource
                 
                 Tables\Columns\IconColumn::make('in_stock')
                     ->boolean(),
-                
+
                 Tables\Columns\IconColumn::make('is_featured')
+                    ->boolean(),
+
+
+                Tables\Columns\IconColumn::make('is_active')
+                    ->boolean(),
+                Tables\Columns\IconColumn::make('on_sale')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -127,10 +133,10 @@ class ProductResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('category')
-                    ->label('By Category')
+                    ->label(__('dashboard.by-category'))
                     ->relationship('category', 'name'),
                     Tables\Filters\SelectFilter::make('brand')
-                    ->label('By Brand')
+                    ->label(__('dashboard.by-brand'))
                     ->relationship('brand', 'name')
             ])
             ->actions([
