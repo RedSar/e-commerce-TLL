@@ -5,5 +5,6 @@ return [
     'goodbye' => 'Goodbye!',
     'by-category' => 'By category',
     'by-brand' => 'By brand',
+    'orders' => 'Orders',
 ];
 

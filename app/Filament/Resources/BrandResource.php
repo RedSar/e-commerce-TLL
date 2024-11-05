@@ -23,6 +23,16 @@ class BrandResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-computer-desktop';
 
+    public static function getLabel(): string
+    {
+        return __('resources.brand.label');
+    }
+
+    public static function getPluralLabel(): string
+    {
+        return __('resources.brand.plural');
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -30,6 +40,7 @@ class BrandResource extends Resource
                 Section::make([
                     Grid::make()->schema([
                         TextInput::make('name')
+                            ->label(__('resources.brand.fields.name'))
                             ->required()
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn(string $operation, $state, Set $set) => $operation === 'create' ? $set('slug', str($state)->slug('-')) : null)
