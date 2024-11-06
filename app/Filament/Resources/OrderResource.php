@@ -11,6 +11,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -124,7 +125,7 @@ class OrderResource extends Resource
                                 ->distinct()
                                 ->reactive()
                                 ->disableOptionsWhenSelectedInSiblingRepeaterItems()
-                                ->afterStateUpdated(function($state , Set $set, Get $get) {
+                                ->afterStateUpdated(function ($state, Set $set, Get $get) {
                                     $price = Product::find($state)?->price ?? 0;
                                     $set('unit_amount', $price);
                                     $set('total_amount', $price * $get('quantity'));
@@ -161,15 +162,15 @@ class OrderResource extends Resource
                         ->content(function (Set $set, Get $get) {
                             $total = 0;
                             $items = $get('items');
-                            if(!$items) {
+                            if (!$items) {
                                 return 0;
                             } else {
-                                foreach($items as $item) {
+                                foreach ($items as $item) {
                                     $total += $item['total_amount'];
                                 }
                                 $set('grand_total', $total);
 
-                                return Number::currency(number:$total, in:$get('currency'),locale: 'fr')  ;
+                                return Number::currency(number: $total, in: $get('currency'), locale: 'fr');
                             }
                         }),
 
@@ -182,14 +183,81 @@ class OrderResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label("Name of User"),
+                Tables\Columns\TextColumn::make('currency')->sortable(),
+                Tables\Columns\TextColumn::make('grand_total')
+                    ->label("Total Amount")
+                  
+                    ->money(fn($record) => $record->currency)
+                    ->alignEnd(),
+
+                
+                Tables\Columns\SelectColumn::make('status')
+                ->label("Status")
+    
+                ->options([
+                    'new' => 'New',
+                    'processing' => 'Processing',
+                    'shipped' => 'Shipped',
+                    'delivered' => 'Delivered',
+                    'cancelled' => 'Cancelled',
+                ])
+                ->default(fn($record)=>$record->statuc) ->alignCenter(),
+
+                Tables\Columns\TextColumn::make('payment_method')
+                    ->label('Méthode de paiement')
+                    ->searchable()
+                    ->alignCenter(),
+
+                Tables\Columns\TextColumn::make('shipping_method')
+                    ->label('Méthode de livraison')
+                    ->searchable()
+                    ->alignCenter(),
+                Tables\Columns\TextColumn::make('payment_status')
+                    ->badge()
+                    ->colors([
+                        'info' => 'pending',
+                        'success' => 'paid',
+                        'danger' => 'failed',
+                     
+                    ]),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->toggleable(isToggledHiddenByDefault: true)
+               
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('status')
+                    ->label("Par status")
+                    ->options([
+                        'new' => 'New',
+                        'processing' => 'Processing',
+                        'shipped' => 'Shipped',
+                        'delivered' => 'Delivered',
+                        'cancelled' => 'Cancelled',
+                    ]),
+                Tables\Filters\SelectFilter::make('payment_status')
+                    ->label('Par la méthode de paiement')
+                    ->options([
+                        'pending' => 'Pending',
+                        'paid' => 'Paid',
+                        'failed' => 'Failed'
+                    ])
+                    
+                   
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make(),
+                ])
+                
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -201,8 +269,15 @@ class OrderResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\AddressRelationManager::class
         ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return  'pending : '.static::getModel()::where('payment_status', 'pending')->count();
+    
+        
     }
 
     public static function getPages(): array
